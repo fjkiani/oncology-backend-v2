@@ -1,0 +1,15 @@
+fastapi
+requests
+python-dotenv
+httpx
+pandas
+google-generativeai
+astrapy
+uvicorn
+langchain-google-genai
+langchain
+langchain-community
+web3
+biopython
+firecrawl
+sentence-transformers

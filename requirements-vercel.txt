@@ -1,0 +1,22 @@
+# Vercel-compatible requirements for Oncology Backend
+# These versions are tested to work with Vercel's Python runtime
+
+fastapi==0.104.1
+requests==2.31.0
+python-dotenv==1.0.0
+httpx==0.25.2
+pandas==2.1.3
+google-generativeai==0.3.2
+astrapy==0.7.1
+uvicorn==0.24.0
+langchain-google-genai==0.0.5
+langchain==0.0.350
+langchain-community==0.0.10
+web3==6.11.3
+biopython==1.81
+firecrawl==0.1.0
+sentence-transformers==2.2.2
+
+# Additional dependencies for Vercel compatibility
+pydantic==2.5.0
+typing-extensions==4.8.0 
