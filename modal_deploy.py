@@ -1,79 +1,52 @@
 import modal
+import subprocess
+import sys
 from pathlib import Path
 
 # Create Modal app
-app = modal.App("oncology-backend")
+app = modal.App("oncology-backend-v2")
 
-# Define the image with all dependencies
-image = modal.Image.debian_slim(python_version="3.11").pip_install([
-    "fastapi",
-    "requests", 
-    "python-dotenv",
-    "httpx",
-    "pandas",
-    "google-generativeai",
-    "astrapy",
-    "uvicorn",
-    "langchain-google-genai",
-    "langchain",
-    "langchain-community",
-    "web3",
-    "biopython",
-    "firecrawl",
-    "sentence-transformers"
-])
+# Define the image with all dependencies and copy the entire backend
+image = (
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install([
+        "fastapi",
+        "requests", 
+        "python-dotenv",
+        "httpx",
+        "pandas",
+        "google-generativeai",
+        "astrapy",
+        "uvicorn",
+        "langchain-google-genai",
+        "langchain",
+        "langchain-community",
+        "web3",
+        "biopython",
+        "firecrawl",
+        "sentence-transformers"
+    ])
+    .add_local_dir(".", "/app")  # Copy entire backend directory
+    .workdir("/app")  # Set working directory
+)
 
-# Create the FastAPI app
-@app.function(image=image)
-def create_app():
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    import sys
+# Deploy FastAPI as a web server
+@app.function(image=image, timeout=300)
+@modal.web_server(8000, startup_timeout=120)
+def fastapi_server():
     import os
-    
-    # Add the current directory to Python path
-    current_dir = Path(__file__).parent
-    sys.path.insert(0, str(current_dir))
-    
-    # Import and create the FastAPI app
-    from main import app as fastapi_app
-    
-    # Add CORS middleware
-    fastapi_app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],  # Configure this properly for production
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    return fastapi_app
-
-# Deploy as web endpoint
-@app.asgi_app(image=image)
-def fastapi_app():
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
     import sys
-    import os
     
-    # Add the current directory to Python path
-    current_dir = Path(__file__).parent
-    sys.path.insert(0, str(current_dir))
+    # Change to app directory
+    os.chdir("/app")
+    sys.path.insert(0, "/app")
     
-    # Import and create the FastAPI app
-    from main import app as fastapi_app
-    
-    # Add CORS middleware
-    fastapi_app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],  # Configure this properly for production
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    return fastapi_app
-
-if __name__ == "__main__":
-    app.serve() 
+    # Start the FastAPI server using uvicorn with correct binding
+    cmd = [
+        sys.executable, "-m", "uvicorn", 
+        "main:app", 
+        "--host", "0.0.0.0", 
+        "--port", "8000",
+        "--workers", "1"
+    ]
+    subprocess.Popen(cmd) 
