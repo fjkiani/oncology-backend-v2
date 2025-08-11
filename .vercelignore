@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 embedding_models/
 chroma_db/
+tests/
 *.pyc
 *.pyo
 *.pyd
